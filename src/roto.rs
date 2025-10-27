@@ -18,13 +18,34 @@ pub fn sort_userdata(
             rand::rng().random_range(0..n)
         }
 
-        fn string_get(charset: Arc<str>, idx: i64) -> Arc<str> {
-            charset[idx as usize..idx as usize + 1].into()
+        #[copy] type char = Val<char>;
+        #[clone] type StringBuf = Val<Rc<RefCell<String>>>;
+
+        impl Val<Rc<RefCell<String>>> {
+            fn new() -> Self {
+                Val(Default::default())
+            }
+
+            fn push(self, c: Val<char>) {
+                self.borrow_mut().push(c.0)
+            }
+
+            fn as_string(self) -> Arc<str> {
+                let s: &str = &*self.borrow();
+                s.into()
+            }
         }
 
-        fn string_len(s: Arc<str>) -> i64 {
-            s.len() as i64
+        impl Arc<str> {
+            fn get(self, idx: i64) -> Val<char> {
+                Val(self.chars().nth(idx as usize).unwrap())
+            }
+
+            fn len_i64(s: Arc<str>) -> i64 {
+                s.len() as i64
+            }
         }
+
 
         #[clone] type RustData = Val<RustData>;
 
@@ -59,6 +80,10 @@ pub fn sort_userdata(
 
             fn len(this: Val<List>) -> i64 {
                 this.0.0.borrow().len() as i64
+            }
+
+            fn swap(self, i: i64, j: i64) {
+                self.0.0.borrow_mut().swap(i as usize, j as usize)
             }
         }
     };
